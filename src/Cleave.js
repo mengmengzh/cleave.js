@@ -136,6 +136,8 @@ Cleave.prototype = {
             return;
         }
 
+        pps.delimiters = ['(', ')', ' ', '-'];
+
         // Cleave.AsYouTypeFormatter should be provided by
         // external google closure lib
         try {

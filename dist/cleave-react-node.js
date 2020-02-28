@@ -78,20 +78,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    componentDidUpdate: function componentDidUpdate() {
 	        var owner = this,
+	            phoneRegionCode = (owner.props.options || {}).phoneRegionCode,
+	            newValue = owner.props.value,
 	            pps = owner.properties;
 
-	        Util.setSelection(owner.element, owner.state.cursorPosition, pps.document);
-	    },
+	        owner.updateRegisteredEvents(owner.props);
+	        if (newValue !== undefined && newValue !== null) {
 
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        var owner = this,
-	            phoneRegionCode = (nextProps.options || {}).phoneRegionCode,
-	            newValue = nextProps.value;
-
-	        // update registed events
-	        owner.updateRegisteredEvents(nextProps);
-
-	        if (newValue !== undefined) {
 	            newValue = newValue.toString();
 
 	            if (newValue !== owner.properties.result) {
@@ -106,6 +99,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            owner.initPhoneFormatter();
 	            owner.onInput(owner.properties.result);
 	        }
+
+	        Util.setSelection(owner.element, owner.state.cursorPosition, pps.document);
 	    },
 
 	    updateRegisteredEvents: function updateRegisteredEvents(props) {
@@ -2365,7 +2360,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    format: function format(phoneNumber) {
 	        var owner = this;
 
-	        owner.formatter.clear();
+	        if (typeof owner.formatter.reset === 'function') {
+	            owner.formatter.reset();
+	        } else {
+	            owner.formatter.clear();
+	        }
 
 	        // only keep number and +
 	        phoneNumber = phoneNumber.replace(/[^\d+]/g, '');
@@ -2381,10 +2380,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            validated = false;
 
 	        for (var i = 0, iMax = phoneNumber.length; i < iMax; i++) {
-	            current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+	            if (typeof owner.formatter.input === 'function') {
+	                current = owner.formatter.input(phoneNumber.charAt(i));
+	            } else {
+	                current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+	            }
 
 	            // has ()- or space inside
-	            if (/[\s()-]/g.test(current)) {
+	            var test = /[\s()-]/g.test(current);
+	            if (typeof owner.formatter.getNumber === 'function') {
+	                test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
+	            }
+	            if (test) {
 	                result = current;
 
 	                validated = true;
@@ -2399,9 +2406,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // strip ()
 	        // e.g. US: 7161234567 returns (716) 123-4567
-	        result = result.replace(/[()]/g, '');
+	        // result = result.replace(/[()]/g, '');
 	        // replace library delimiter with user customized delimiter
-	        result = result.replace(/[\s-]/g, owner.delimiter);
+	        // result = result.replace(/[\s-]/g, owner.delimiter);
 
 	        return result;
 	    }
@@ -2470,8 +2477,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // starts with 4; 16 digits
 	        visa: /^4\d{0,15}/,
 
-	        // starts with 62; 16 digits
-	        unionPay: /^62\d{0,14}/
+	        // starts with 62/81; 16 digits
+	        unionPay: /^(62|81)\d{0,14}/
 	    },
 
 	    getStrictBlocks: function getStrictBlocks(block) {

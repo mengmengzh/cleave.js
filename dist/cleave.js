@@ -192,6 +192,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	        }
 
+	        pps.delimiters = ['(', ')', ' ', '-'];
+
 	        // Cleave.AsYouTypeFormatter should be provided by
 	        // external google closure lib
 	        try {
@@ -437,6 +439,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        pps.onValueChanged.call(owner, {
 	            target: {
+	                name: owner.element.name,
 	                value: pps.result,
 	                rawValue: owner.getRawValue()
 	            }
@@ -1113,7 +1116,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    format: function (phoneNumber) {
 	        var owner = this;
 
-	        owner.formatter.clear();
+	        if (typeof owner.formatter.reset === 'function') {
+	            owner.formatter.reset();
+	        } else {
+	            owner.formatter.clear();
+	        }
 
 	        // only keep number and +
 	        phoneNumber = phoneNumber.replace(/[^\d+]/g, '');
@@ -1127,10 +1134,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var result = '', current, validated = false;
 
 	        for (var i = 0, iMax = phoneNumber.length; i < iMax; i++) {
-	            current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+	            if (typeof owner.formatter.input === 'function') {
+	                current = owner.formatter.input(phoneNumber.charAt(i));
+	            } else {
+	                current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+	            }
 
 	            // has ()- or space inside
-	            if (/[\s()-]/g.test(current)) {
+	            var test = /[\s()-]/g.test(current);
+	            if (typeof owner.formatter.getNumber === 'function') {
+	                test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
+	            }
+	            if (test) {
 	                result = current;
 
 	                validated = true;
@@ -1145,9 +1160,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // strip ()
 	        // e.g. US: 7161234567 returns (716) 123-4567
-	        result = result.replace(/[()]/g, '');
+	        // result = result.replace(/[()]/g, '');
 	        // replace library delimiter with user customized delimiter
-	        result = result.replace(/[\s-]/g, owner.delimiter);
+	        // result = result.replace(/[\s-]/g, owner.delimiter);
 
 	        return result;
 	    }
@@ -1217,8 +1232,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // starts with 4; 16 digits
 	        visa: /^4\d{0,15}/,
 
-	        // starts with 62; 16 digits
-	        unionPay: /^62\d{0,14}/
+	        // starts with 62/81; 16 digits
+	        unionPay: /^(62|81)\d{0,14}/
 	    },
 
 	    getStrictBlocks: function (block) {

@@ -17,7 +17,11 @@ PhoneFormatter.prototype = {
     format: function (phoneNumber) {
         var owner = this;
 
-        owner.formatter.clear();
+        if (typeof owner.formatter.reset === 'function') {
+            owner.formatter.reset();
+        } else {
+            owner.formatter.clear();
+        }
 
         // only keep number and +
         phoneNumber = phoneNumber.replace(/[^\d+]/g, '');
@@ -31,10 +35,18 @@ PhoneFormatter.prototype = {
         var result = '', current, validated = false;
 
         for (var i = 0, iMax = phoneNumber.length; i < iMax; i++) {
-            current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+            if (typeof owner.formatter.input === 'function') {
+                current = owner.formatter.input(phoneNumber.charAt(i));
+            } else {
+                current = owner.formatter.inputDigit(phoneNumber.charAt(i));
+            }
 
             // has ()- or space inside
-            if (/[\s()-]/g.test(current)) {
+            var test = /[\s()-]/g.test(current);
+            if (typeof owner.formatter.getNumber === 'function') {
+                test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
+            }
+            if (test) {
                 result = current;
 
                 validated = true;
@@ -49,9 +61,9 @@ PhoneFormatter.prototype = {
 
         // strip ()
         // e.g. US: 7161234567 returns (716) 123-4567
-        result = result.replace(/[()]/g, '');
+        // result = result.replace(/[()]/g, '');
         // replace library delimiter with user customized delimiter
-        result = result.replace(/[\s-]/g, owner.delimiter);
+        // result = result.replace(/[\s-]/g, owner.delimiter);
 
         return result;
     }
