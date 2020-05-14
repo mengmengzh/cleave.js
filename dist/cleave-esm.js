@@ -579,7 +579,9 @@ PhoneFormatter.prototype = {
             // has ()- or space inside
             var test = /[\s()-]/g.test(current);
             if (typeof owner.formatter.getNumber === 'function') {
-                test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
+                if (owner.formatter.getNumber() && owner.formatter.getNumber().country !== 'GB') {
+                    test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
+                }
             }
             if (test) {
                 result = current;
