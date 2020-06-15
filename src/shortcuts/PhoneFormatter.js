@@ -42,8 +42,10 @@ PhoneFormatter.prototype = {
             }
 
             // has ()- or space inside
+            var isGb = false;
             var test = /[\s()-]/g.test(current);
             if (typeof owner.formatter.getNumber === 'function') {
+                isGb = owner.formatter.getNumber() && owner.formatter.getNumber().country === 'GB';
                 if (owner.formatter.getNumber() && owner.formatter.getNumber().country !== 'GB') {
                     test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
                 }
@@ -53,7 +55,7 @@ PhoneFormatter.prototype = {
 
                 validated = true;
             } else {
-                if (!validated) {
+                if (!validated || isGb) {
                     result = current;
                 }
                 // else: over length input
