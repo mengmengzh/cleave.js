@@ -55,7 +55,8 @@ PhoneFormatter.prototype = {
 
                 validated = true;
             } else {
-                if (!validated || isGb) {
+                // hard code GB based numbers validation
+                if (!validated || (isGb && i < 10)) {
                     result = current;
                 }
                 // else: over length input

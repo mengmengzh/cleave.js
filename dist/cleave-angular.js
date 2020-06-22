@@ -1198,8 +1198,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            // has ()- or space inside
+	            var isGb = false;
 	            var test = /[\s()-]/g.test(current);
 	            if (typeof owner.formatter.getNumber === 'function') {
+	                isGb = owner.formatter.getNumber() && owner.formatter.getNumber().country === 'GB';
 	                if (owner.formatter.getNumber() && owner.formatter.getNumber().country !== 'GB') {
 	                    test = test && owner.formatter.getNumber() && owner.formatter.getNumber().isPossible();
 	                }
@@ -1209,7 +1211,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                validated = true;
 	            } else {
-	                if (!validated) {
+	                // hard code GB based numbers validation
+	                if (!validated || (isGb && i < 10)) {
 	                    result = current;
 	                }
 	                // else: over length input
